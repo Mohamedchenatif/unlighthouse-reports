@@ -1,0 +1,30 @@
+name: Run Unlighthouse Audit
+
+on:
+  workflow_dispatch:  # allows you to run manually
+  schedule:
+    - cron: '0 0 * * 0'  # runs weekly (optional)
+
+jobs:
+  unlighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Unlighthouse
+        run: npm install -g unlighthouse
+
+      - name: Run Audit
+        run: unlighthouse --site https://example.com --build-static
+
+      - name: Upload report
+        uses: actions/upload-artifact@v3
+        with:
+          name: unlighthouse-report
+          path: .unlighthouse/
