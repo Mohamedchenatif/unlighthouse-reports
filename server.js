@@ -7,63 +7,96 @@ const path = require('path');
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public'));
 
 const PORT = process.env.PORT || 3000;
 
 // Serve static files from reports directory
 app.use('/reports', express.static('reports'));
 
-// Health check endpoint
+// Store scan status
+const scans = {};
+
+// Serve the UI
 app.get('/', (req, res) => {
-  res.json({ 
-    status: 'Unlighthouse Service Running',
-    usage: 'POST to /scan with { "url": "https://example.com" }'
-  });
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Scan endpoint
-app.post('/scan', async (req, res) => {
+// API: Start scan
+app.post('/api/scan', async (req, res) => {
   const { url } = req.body;
   
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
   }
 
-  // Generate unique ID for this scan
   const scanId = Date.now().toString();
   const outputPath = path.join(__dirname, 'reports', scanId);
 
-  console.log(`Starting scan for: ${url}`);
+  // Store scan status
+  scans[scanId] = {
+    url: url,
+    status: 'running',
+    startTime: new Date(),
+    reportUrl: null
+  };
 
-  // Run Unlighthouse
-  const command = `npx @unlighthouse/cli --site ${url} --build-static --output-path ${outputPath}`;
+  console.log(`Starting scan ${scanId} for: ${url}`);
+
+  // Return immediately with scan ID
+  res.json({
+    success: true,
+    scanId: scanId,
+    message: 'Scan started',
+    statusUrl: `/api/status/${scanId}`
+  });
+
+  // Run scan in background
+  const command = `npx @unlighthouse/cli --site "${url}" --build-static --output-path "${outputPath}"`;
 
   exec(command, { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
     if (error) {
-      console.error(`Error: ${error.message}`);
-      return res.status(500).json({ 
-        error: 'Scan failed', 
-        details: error.message 
-      });
+      console.error(`Scan ${scanId} failed: ${error.message}`);
+      scans[scanId].status = 'failed';
+      scans[scanId].error = error.message;
+      return;
     }
 
-    console.log(`Scan completed for: ${url}`);
-
-    // Return the report URL
-    const reportUrl = `${req.protocol}://${req.get('host')}/reports/${scanId}/index.html`;
-    
-    res.json({
-      success: true,
-      scanId: scanId,
-      reportUrl: reportUrl,
-      message: 'Scan completed successfully'
-    });
+    console.log(`Scan ${scanId} completed`);
+    scans[scanId].status = 'completed';
+    scans[scanId].reportUrl = `/reports/${scanId}/index.html`;
+    scans[scanId].endTime = new Date();
   });
 });
 
-// Create reports directory if it doesn't exist
+// API: Check scan status
+app.get('/api/status/:scanId', (req, res) => {
+  const { scanId } = req.params;
+  const scan = scans[scanId];
+
+  if (!scan) {
+    return res.status(404).json({ error: 'Scan not found' });
+  }
+
+  res.json(scan);
+});
+
+// API: List all scans
+app.get('/api/scans', (req, res) => {
+  const scanList = Object.keys(scans).map(id => ({
+    scanId: id,
+    ...scans[id]
+  })).reverse(); // Newest first
+
+  res.json(scanList);
+});
+
+// Create required directories
 if (!fs.existsSync('reports')) {
   fs.mkdirSync('reports');
+}
+if (!fs.existsSync('public')) {
+  fs.mkdirSync('public');
 }
 
 app.listen(PORT, () => {
