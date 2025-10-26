@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unlighthouse Speed Reports</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding-top: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .status.running {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .report-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 12px 30px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .report-link:hover {
+            background: #218838;
+        }
+
+        .scans-list {
+            margin-top: 20px;
+        }
+
+        .scan-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .scan-url {
+            font-weight: 600;
+            color: #333;
+            word-break: break-all;
+            flex: 1;
+        }
+
+        .scan-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 15px;
+        }
+
+        .scan-status.running {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .scan-status.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .scan-status.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .view-report-btn {
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+
+        .view-report-btn:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Unlighthouse</h1>
+            <p>Comprehensive Website Speed Analysis</p>
+        </div>
+
+        <div class="card">
+            <div class="input-group">
+                <label for="websiteUrl">Website URL</label>
+                <input 
+                    type="url" 
+                    id="websiteUrl" 
+                    placeholder="https://example.com"
+                    required
+                >
+            </div>
+            
+            <button class="btn" onclick="startScan()">
+                Start Speed Analysis
+            </button>
+
+            <div id="status"></div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 20px;">Recent Scans</h2>
+            <div id="scansList" class="scans-list"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentScanId = null;
+        let statusCheckInterval = null;
+
+        // Load recent scans on page load
+        loadRecentScans();
+
+        async function startScan() {
+            const url = document.getElementById('websiteUrl').value;
+            const statusDiv = document.getElementById('status');
+            const btn = document.querySelector('.btn');
+
+            if (!url) {
+                alert('Please enter a website URL');
+                return;
+            }
+
+            // Disable button
+            btn.disabled = true;
+            btn.textContent = 'Starting Scan...';
+
+            // Show loading status
+            statusDiv.className = 'status running';
+            statusDiv.innerHTML = '<div class="loader"></div><p>Initializing scan...</p>';
+
+            try {
+                const response = await fetch('/api/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentScanId = data.scanId;
+                    statusDiv.innerHTML = '<div class="loader"></div><p>Scanning in progress... This may take 3-5 minutes.</p>';
+                    
+                    // Start checking status
+                    statusCheckInterval = setInterval(checkStatus, 5000);
+                    checkStatus(); // Check immediately
+                } else {
+                    throw new Error(data.error || 'Scan failed');
+                }
+            } catch (error) {
+                statusDiv.className = 'status failed';
+                statusDiv.textContent = '❌ Error: ' + error.message;
+                btn.disabled = false;
+                btn.textContent = 'Start Speed Analysis';
+            }
+        }
+
+        async function checkStatus() {
+            if (!currentScanId) return;
+
+            try {
+                const response = await fetch(`/api/status/${currentScanId}`);
+                const data = await response.json();
+
+                const statusDiv = document.getElementById('status');
+                const btn = document.querySelector('.btn');
+
+                if (data.status === 'completed') {
+                    clearInterval(statusCheckInterval);
+                    statusDiv.className = 'status completed';
+                    statusDiv.innerHTML = `
+                        ✅ Scan completed successfully!
+                        <br>
+                        <a href="${data.reportUrl}" target="_blank" class="report-link">
+                            📊 View Full Report
+                        </a>
+                    `;
+                    btn.disabled = false;
+                    btn.textContent = 'Start Speed Analysis';
+                    currentScanId = null;
+                    loadRecentScans();
+                } else if (data.status === 'failed') {
+                    clearInterval(statusCheckInterval);
+                    statusDiv.className = 'status failed';
+                    statusDiv.textContent = '❌ Scan failed: ' + (data.error || 'Unknown error');
+                    btn.disabled = false;
+                    btn.textContent = 'Start Speed Analysis';
+                    currentScanId = null;
+                    loadRecentScans();
+                }
+            } catch (error) {
+                console.error('Status check error:', error);
+            }
+        }
+
+        async function loadRecentScans() {
+            try {
+                const response = await fetch('/api/scans');
+                const scans = await response.json();
+
+                const listDiv = document.getElementById('scansList');
+
+                if (scans.length === 0) {
+                    listDiv.innerHTML = '<p style="text-align:center;color:#999;">No scans yet</p>';
+                    return;
+                }
+
+                listDiv.innerHTML = scans.slice(0, 10).map(scan => `
+                    <div class="scan-item">
+                        <div class="scan-url">${scan.url}</div>
+                        <div style="display: flex; align-items: center;">
+                            <span class="scan-status ${scan.status}">${scan.status}</span>
+                            ${scan.status === 'completed' ? 
+                                `<a href="${scan.reportUrl}" target="_blank" class="view-report-btn">View Report</a>` 
+                                : ''
+                            }
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Load scans error:', error);
+            }
+        }
+
+        // Refresh scans list every 30 seconds
+        setInterval(loadRecentScans, 30000);
+    </script>
+</body>
+</html>
