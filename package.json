@@ -4,11 +4,13 @@
   "description": "Unlighthouse web service",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "postinstall": "node install-chrome.js"
   },
   "dependencies": {
     "@unlighthouse/cli": "^0.10.3",
     "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "puppeteer": "^21.6.0"
   }
 }
