@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: unlighthouse-service
+    env: node
+    buildCommand: |
+      npm install
+      apt-get update
+      apt-get install -y chromium chromium-driver
+    startCommand: npm start
+    envVars:
+      - key: CHROME_PATH
+        value: /usr/bin/chromium
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: true
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/chromium
