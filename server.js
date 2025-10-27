@@ -52,12 +52,7 @@ app.post('/api/scan', async (req, res) => {
   });
 
   // Run scan in background
-// Set Chrome path for Render
-const chromePath = process.env.CHROME_PATH || 
-                   process.env.PUPPETEER_EXECUTABLE_PATH || 
-                   '/usr/bin/chromium';
-
-const command = `CHROME_PATH="${chromePath}" PUPPETEER_EXECUTABLE_PATH="${chromePath}" npx @unlighthouse/cli --site "${url}" --build-static --output-path "${outputPath}"`;
+const command = `npx @unlighthouse/cli --site "${url}" --build-static --output-path
 
   exec(command, { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
     if (error) {
