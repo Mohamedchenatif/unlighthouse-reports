@@ -41,30 +41,30 @@ app.post('/api/scan', async (req, res) => {
     reportUrl: null
   };
 
-  console.log(`Starting scan ${scanId} for: ${url}`);
+  console.log('Starting scan ' + scanId + ' for: ' + url);
 
   // Return immediately with scan ID
   res.json({
     success: true,
     scanId: scanId,
     message: 'Scan started',
-    statusUrl: `/api/status/${scanId}`
+    statusUrl: '/api/status/' + scanId
   });
 
   // Run scan in background
-const command = `npx @unlighthouse/cli --site "${url}" --build-static --output-path
+  const command = 'npx @unlighthouse/cli --site "' + url + '" --build-static --output-path "' + outputPath + '"';
 
   exec(command, { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
     if (error) {
-      console.error(`Scan ${scanId} failed: ${error.message}`);
+      console.error('Scan ' + scanId + ' failed: ' + error.message);
       scans[scanId].status = 'failed';
       scans[scanId].error = error.message;
       return;
     }
 
-    console.log(`Scan ${scanId} completed`);
+    console.log('Scan ' + scanId + ' completed');
     scans[scanId].status = 'completed';
-    scans[scanId].reportUrl = `/reports/${scanId}/index.html`;
+    scans[scanId].reportUrl = '/reports/' + scanId + '/index.html';
     scans[scanId].endTime = new Date();
   });
 });
@@ -86,7 +86,7 @@ app.get('/api/scans', (req, res) => {
   const scanList = Object.keys(scans).map(id => ({
     scanId: id,
     ...scans[id]
-  })).reverse(); // Newest first
+  })).reverse();
 
   res.json(scanList);
 });
@@ -100,5 +100,5 @@ if (!fs.existsSync('public')) {
 }
 
 app.listen(PORT, () => {
-  console.log(`Unlighthouse service running on port ${PORT}`);
+  console.log('Unlighthouse service running on port ' + PORT);
 });
